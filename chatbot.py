@@ -90,6 +90,8 @@ history = [
      and the read_webpage tool can read the text contained at those web pages.
     * With the create_audio tool, you can convert a podcast script text into
       an audio mp3 podcast.
+    * Never show the script to the user and just ask them how long they want the podcast
+      to be.
     </tools>"""},
     {"role": "assistant", "content": "How can I help you today?"}
 ]
