@@ -23,18 +23,19 @@ with gr.Blocks(title="Agentic Podcast Builder") as demo:
         """
     )
 
-    with gr.Row():
-        topic = gr.Textbox(
-            label="Podcast Topic",
-            placeholder="Example: How AI voice agents are changing media",
-        )
-        duration_minutes = gr.Slider(
-            minimum=1,
-            maximum=20,
-            value=5,
-            step=1,
-            label="Duration (minutes)",
-        )
+    topic = gr.Textbox(
+        label="Podcast Topic",
+        placeholder="Example: How AI voice agents are changing media",
+        lines=3,
+        max_lines=5,
+    )
+    duration_minutes = gr.Slider(
+        minimum=1,
+        maximum=20,
+        value=5,
+        step=1,
+        label="Duration (minutes)",
+    )
 
     generate_button = gr.Button("Generate Podcast", variant="primary")
     status = gr.Textbox(label="Status", interactive=False)
