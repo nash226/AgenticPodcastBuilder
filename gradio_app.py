@@ -49,4 +49,4 @@ with gr.Blocks(title="Agentic Podcast Builder") as demo:
 
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(share=True)
