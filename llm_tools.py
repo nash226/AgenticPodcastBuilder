@@ -1,50 +1,61 @@
 import os
-from dotenv import load_dotenv
-from openai import OpenAI
+
 import requests
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
+
 client = OpenAI()
-google_api_key = os.getenv("GOOGLE_API_KEY")
-search_engine_id = os.getenv("SEARCH_ENGINE_ID")
+REQUEST_TIMEOUT_SECONDS = 20
+
+
+def _require_env_vars(*names):
+    missing = [name for name in names if not os.getenv(name)]
+    if missing:
+        missing_vars = ", ".join(missing)
+        raise ValueError(f"Missing required environment variable(s): {missing_vars}")
+
 
 def read_webpage(url):
-    response = requests.get(url)
+    response = requests.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
+    response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
-    text = soup.get_text()
-    return text
+    return soup.get_text(separator=" ", strip=True)
+
 
 def search_web(query):
+    _require_env_vars("GOOGLE_API_KEY", "SEARCH_ENGINE_ID")
+
     url = "https://www.googleapis.com/customsearch/v1"
     params = {
-        "key": google_api_key,
-        "cx": search_engine_id,
+        "key": os.getenv("GOOGLE_API_KEY"),
+        "cx": os.getenv("SEARCH_ENGINE_ID"),
         "q": query,
-        "num": 5  # hardcoded to return 5 URL results for demo purposes
+        "num": 5,
     }
 
-    response = requests.get(url, params=params)
-    data = response.json().get("items") or []
-    urls = []
-    for item in data:
-        url = item.get('link')
-        urls.append(url)
+    response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT_SECONDS)
+    response.raise_for_status()
 
-    return urls
+    items = response.json().get("items") or []
+    return [item["link"] for item in items if item.get("link")]
 
 
 def create_audio(script):
+    _require_env_vars("OPENAI_API_KEY")
+
     audio_filename = "podcast.mp3"
     with client.audio.speech.with_streaming_response.create(
         model="gpt-4o-mini-tts",
         voice="ballad",
         instructions="""Persona: You are a newscaster.
                         Delivery: Crisp and articulate, with measured pacing.
-                        Tone: Objective and neutral, confident and 
+                        Tone: Objective and neutral, confident and
                         authoritative, conversational yet formal.""",
-        input=script
+        input=script,
     ) as response:
         response.stream_to_file(audio_filename)
-    
-    return True
+
+    return audio_filename

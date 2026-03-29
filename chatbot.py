@@ -1,26 +1,22 @@
 import json
 from datetime import date
-from llm_tools import read_webpage, search_web, create_audio
+
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from llm_tools import create_audio, read_webpage, search_web
+
 load_dotenv()
 llm = OpenAI()
-
-def llm_response(prompt, tools):
-    response = llm.responses.create(
-        model="gpt-5-mini",
-        tools=TOOLS,
-        input=prompt
-    )
-    return response
 
 TOOLS = [
     {
         "type": "function",
         "name": "search_web",
-        "description": """Searches the web based on a query and 
-                       retrieves an array of relevant URLs.""",
+        "description": (
+            "Searches the web based on a query and retrieves an array of "
+            "relevant URLs."
+        ),
         "parameters": {
             "type": "object",
             "properties": {
@@ -50,9 +46,10 @@ TOOLS = [
     {
         "type": "function",
         "name": "create_audio",
-        "description": """Uses speech-to-text technology to convert a 
-                       podcast script (string) into an audio mp3 podcast 
-                       named podcast.mp3.""",
+        "description": (
+            "Uses text-to-speech to convert a podcast script into an MP3 "
+            "podcast named podcast.mp3."
+        ),
         "parameters": {
             "type": "object",
             "properties": {
@@ -72,58 +69,93 @@ TOOL_FUNCTIONS = {
     "create_audio": create_audio,
 }
 
-print(f"Assistant: How can I help you today?\n")
-user_input = input("User: ")
-history = [
-    {"role": "developer", "content": f"""You are an AI assistant. Today's
-    date is {date.today().strftime("%B %d, %Y")}.
-    You have access to several specialized tools. Here are your tools:
-    
-    <tools>
-    * With the search_web tool, you have the ability to search the web based 
-     on a query and retrieve URLs of web pages relevant to that query. This 
-     is especially useful for searching for current information and 
-     information you don't possess in your internal knowledge.
-    * With the read_webpage tool, you have the ability to read the text from 
-     a web page of any given URL. This is a useful tool to use in conjunction 
-     with the search_web tool. That is, the search_web tool retrieves URLs, 
-     and the read_webpage tool can read the text contained at those web pages.
-    * With the create_audio tool, you can convert a podcast script text into
-      an audio mp3 podcast.
-    * Never show the script to the user and just ask them how long they want the podcast
-      to be.
-    </tools>"""},
-    {"role": "assistant", "content": "How can I help you today?"}
-]
+SYSTEM_PROMPT = f"""You are an AI assistant. Today's date is
+{date.today().strftime("%B %d, %Y")}.
+You have access to several specialized tools. Here are your tools:
 
-while user_input != "exit":  # main conversation loop
-    history += [{"role": "user", "content": user_input}]
+<tools>
+* With the search_web tool, you have the ability to search the web based
+  on a query and retrieve URLs of web pages relevant to that query. This
+  is especially useful for searching for current information and
+  information you do not possess in your internal knowledge.
+* With the read_webpage tool, you have the ability to read the text from
+  a web page of any given URL. This is useful in conjunction with the
+  search_web tool.
+* With the create_audio tool, you can convert a podcast script into an
+  audio mp3 podcast.
+* Never show the script to the user and just ask them how long they want
+  the podcast to be.
+</tools>"""
 
-    while True:  # the agent loop
-        response = llm_response(history, TOOLS)
-        history += response.output
-        tool_calls = [obj for obj in response.output if \
-                      getattr(obj, "type", None) == "function_call"]
 
-        if not tool_calls:
-            break  # exit loop when there are no tool calls
+def llm_response(prompt, tools):
+    return llm.responses.create(
+        model="gpt-5-mini",
+        tools=tools,
+        input=prompt,
+    )
 
-        for tool_call in tool_calls:
-            function_name = tool_call.name
-            args = json.loads(tool_call.arguments)
 
-            function = TOOL_FUNCTIONS.get(function_name)
-            result = {function_name: function(**args)}
+def run_tool_call(tool_call):
+    function_name = tool_call.name
+    function = TOOL_FUNCTIONS.get(function_name)
+    if function is None:
+        raise ValueError(f"Unsupported tool requested: {function_name}")
 
-            history += [{"type": "function_call_output",
-                        "call_id": tool_call.call_id,
-                        "output": json.dumps(result)}]
-            
+    args = json.loads(tool_call.arguments)
+    result = {function_name: function(**args)}
+    return {
+        "type": "function_call_output",
+        "call_id": tool_call.call_id,
+        "output": json.dumps(result),
+    }
 
-    print(f"\nAssistant: {response.output_text}\n")
 
-    history += [
-        {"role": "assistant", "content": response.output_text},
+def main():
+    print("Assistant: How can I help you today?\n")
+    history = [
+        {"role": "developer", "content": SYSTEM_PROMPT},
+        {"role": "assistant", "content": "How can I help you today?"},
     ]
 
-    user_input = input("User: ")
+    while True:
+        try:
+            user_input = input("User: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nExiting.")
+            break
+
+        if user_input.lower() == "exit":
+            break
+        if not user_input:
+            continue
+
+        history.append({"role": "user", "content": user_input})
+
+        try:
+            while True:
+                response = llm_response(history, TOOLS)
+                history.extend(response.output)
+                tool_calls = [
+                    obj
+                    for obj in response.output
+                    if getattr(obj, "type", None) == "function_call"
+                ]
+
+                if not tool_calls:
+                    print(f"\nAssistant: {response.output_text}\n")
+                    history.append(
+                        {"role": "assistant", "content": response.output_text}
+                    )
+                    break
+
+                for tool_call in tool_calls:
+                    history.append(run_tool_call(tool_call))
+        except Exception as exc:
+            message = f"Sorry, something went wrong: {exc}"
+            print(f"\nAssistant: {message}\n")
+            history.append({"role": "assistant", "content": message})
+
+
+if __name__ == "__main__":
+    main()

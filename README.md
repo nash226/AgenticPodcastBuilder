@@ -34,6 +34,12 @@ Install dependencies:
 python3 -m pip install openai python-dotenv requests beautifulsoup4
 ```
 
+Or install from the project file:
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
 ## Environment Variables
 
 Create a `.env` file in the project root with:
@@ -42,6 +48,12 @@ Create a `.env` file in the project root with:
 OPENAI_API_KEY=your_openai_api_key
 GOOGLE_API_KEY=your_google_api_key
 SEARCH_ENGINE_ID=your_search_engine_id
+```
+
+You can start from the included template:
+
+```bash
+cp .env.example .env
 ```
 
 ## Run
@@ -53,6 +65,14 @@ python3 chatbot.py
 ```
 
 Type `exit` to end the chat.
+
+## Testing
+
+Run the unit tests with:
+
+```bash
+python3 -m unittest
+```
 
 ## Project Files
 
