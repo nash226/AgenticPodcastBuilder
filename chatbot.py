@@ -69,24 +69,26 @@ TOOL_FUNCTIONS = {
     "create_audio": create_audio,
 }
 
-SYSTEM_PROMPT = f"""You are an AI assistant. Today's date is
-{date.today().strftime("%B %d, %Y")}.
-You have access to several specialized tools. Here are your tools:
 
-<tools>
-* With the search_web tool, you have the ability to search the web based
-  on a query and retrieve URLs of web pages relevant to that query. This
-  is especially useful for searching for current information and
-  information you do not possess in your internal knowledge.
-* With the read_webpage tool, you have the ability to read the text from
-  a web page of any given URL. This is useful in conjunction with the
-  search_web tool.
-* With the create_audio tool, you can convert a podcast script into an
-  audio mp3 podcast.
-* Never show the script to the user and just ask them how long they want
-  the podcast to be.
-</tools>"""
-
+SYSTEM_PROMPT = {"role": "developer", "content": f"""You are an AI assistant.
+You have access to several specialized tools. Todays date is ${date.today().strftime("%B %d, %Y")}.
+Here are your tools:
+<tools>s
+* With the search_web tool, you have the ability to search the web based on a
+query and retrieve urls of web pages relevant to that query. This is
+especially useful for searching for current information and information you
+don't possess in your internal knowledge.
+* With the read_webpage tool, you have the ability to read the text from a
+web page of any given url. This is a useful tool to use in conjunction with
+the search_web tool. That is, the search_web tool retrieves urls, and the
+read_webpage tool can read the text contained at those web pages.
+* With the create_audio tool, you can convert a podcast script text into an
+audio mp3 podcast.
+</tools>
+When a user asks you to do something, don't use tools without first thinking.
+Rather, first generate a comprehensive plan as to how you'll use the tools (if
+at all) to accomplish the user's goal. Then, follow your plan using the tools.
+"""},
 
 def llm_response(prompt, tools):
     return llm.responses.create(
