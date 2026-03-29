@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
@@ -43,10 +44,12 @@ def search_web(query):
     return [item["link"] for item in items if item.get("link")]
 
 
-def create_audio(script):
+def create_audio(script, audio_filename="podcast.mp3"):
     _require_env_vars("OPENAI_API_KEY")
 
-    audio_filename = "podcast.mp3"
+    output_path = Path(audio_filename)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
     with client.audio.speech.with_streaming_response.create(
         model="gpt-4o-mini-tts",
         voice="ballad",
@@ -56,6 +59,6 @@ def create_audio(script):
                         authoritative, conversational yet formal.""",
         input=script,
     ) as response:
-        response.stream_to_file(audio_filename)
+        response.stream_to_file(str(output_path))
 
-    return audio_filename
+    return str(output_path)

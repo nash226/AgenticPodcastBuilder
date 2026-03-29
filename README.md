@@ -7,9 +7,10 @@ Agentic Podcast Builder is a Python chatbot that researches a topic on the web, 
 ## Features
 
 - Chat-based interface in the terminal
+- Web interface built with Gradio
 - Web search through Google Custom Search
 - Webpage text extraction for live research
-- Podcast audio generation saved as `podcast.mp3`
+- Podcast audio generation saved as downloadable MP3 files
 - Environment-based configuration with `.env`
 
 ## Requirements
@@ -66,6 +67,15 @@ python3 chatbot.py
 
 Type `exit` to end the chat.
 
+To launch the web interface:
+
+```bash
+python3 gradio_app.py
+```
+
+Gradio will print a local URL in the terminal. Open that URL in your browser to
+generate and download MP3 files.
+
 ## Testing
 
 Run the unit tests with:
@@ -77,6 +87,7 @@ python3 -m unittest
 ## Project Files
 
 - `chatbot.py`: main terminal chatbot loop
+- `gradio_app.py`: Gradio web interface for generating downloadable MP3s
 - `llm_tools.py`: tool implementations for search, webpage reading, and audio generation
 
 ## Output
@@ -84,5 +95,5 @@ python3 -m unittest
 When audio generation is triggered, the app writes the result to:
 
 ```text
-podcast.mp3
+generated_podcasts/
 ```
