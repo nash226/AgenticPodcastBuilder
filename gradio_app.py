@@ -7,12 +7,15 @@ def build_podcast(topic, duration_minutes):
     if not topic or not topic.strip():
         raise gr.Error("Enter a topic before generating a podcast.")
 
-    status = (
-        f"Generating a podcast about '{topic.strip()}' for approximately "
-        f"{duration_minutes} minutes."
-    )
-    summary, audio_path = generate_podcast(topic.strip(), int(duration_minutes))
-    return status, summary, audio_path
+    try:
+        status = (
+            f"Generating a podcast about '{topic.strip()}' for approximately "
+            f"{duration_minutes} minutes."
+        )
+        summary, audio_path = generate_podcast(topic.strip(), int(duration_minutes))
+        return status, summary, audio_path
+    except Exception as exc:
+        raise gr.Error(f"Podcast generation failed: {exc}") from exc
 
 
 with gr.Blocks(title="Agentic Podcast Builder") as demo:
@@ -48,6 +51,8 @@ with gr.Blocks(title="Agentic Podcast Builder") as demo:
         outputs=[status, summary, audio_file],
     )
 
+demo.queue()
+
 
 if __name__ == "__main__":
-    demo.launch(share=True)
+    demo.launch(share=True, show_error=True)

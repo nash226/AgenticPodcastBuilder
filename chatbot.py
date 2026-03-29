@@ -118,7 +118,13 @@ def run_tool_call(tool_call):
         raise ValueError(f"Unsupported tool requested: {function_name}")
 
     args = json.loads(tool_call.arguments)
-    result = {function_name: function(**args)}
+    try:
+        result = {function_name: function(**args)}
+    except Exception as exc:
+        result = {
+            "error": f"Tool '{function_name}' failed: {exc}",
+            "tool_name": function_name,
+        }
     return {
         "type": "function_call_output",
         "call_id": tool_call.call_id,
