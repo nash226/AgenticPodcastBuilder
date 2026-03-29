@@ -71,7 +71,7 @@ TOOL_FUNCTIONS = {
 
 
 SYSTEM_PROMPT = {"role": "developer", "content": f"""You are an AI assistant.
-You have access to several specialized tools. Todays date is ${date.today().strftime("%B %d, %Y")}.
+You have access to several specialized tools. Todays date is {date.today().strftime("%B %d, %Y")}.
 Here are your tools:
 <tools>s
 * With the search_web tool, you have the ability to search the web based on a
