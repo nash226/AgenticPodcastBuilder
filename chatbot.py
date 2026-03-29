@@ -70,10 +70,10 @@ TOOL_FUNCTIONS = {
 }
 
 
-SYSTEM_PROMPT = {"role": "developer", "content": f"""You are an AI assistant.
-You have access to several specialized tools. Todays date is {date.today().strftime("%B %d, %Y")}.
+SYSTEM_PROMPT = f"""You are an AI assistant.
+You have access to several specialized tools. Today's date is {date.today().strftime("%B %d, %Y")}.
 Here are your tools:
-<tools>s
+<tools>
 * With the search_web tool, you have the ability to search the web based on a
 query and retrieve urls of web pages relevant to that query. This is
 especially useful for searching for current information and information you
@@ -88,7 +88,7 @@ audio mp3 podcast.
 When a user asks you to do something, don't use tools without first thinking.
 Rather, first generate a comprehensive plan as to how you'll use the tools (if
 at all) to accomplish the user's goal. Then, follow your plan using the tools.
-"""},
+"""
 
 def llm_response(prompt, tools):
     return llm.responses.create(
